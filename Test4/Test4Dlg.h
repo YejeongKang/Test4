@@ -3,7 +3,13 @@
 //
 
 #pragma once
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include <iostream> 
+#include <string>
 
+using namespace std;
 
 // CTest4Dlg dialog
 class CTest4Dlg : public CDialogEx
@@ -34,4 +40,10 @@ protected:
 
 public:
 	afx_msg void OnBnClickedButton1();
+	
+	string setArrayForCurrent();
+	string setArrayForVibration();
+	vector<double> current, vibration;
+
+	afx_msg void OnBnClickedButton2();
 };

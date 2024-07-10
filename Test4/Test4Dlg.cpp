@@ -11,6 +11,7 @@
 #include <afxwin.h> // For AfxMessageBox
 #pragma comment(lib, "winhttp.lib")
 
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -35,6 +36,7 @@ BEGIN_MESSAGE_MAP(CTest4Dlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON1, &CTest4Dlg::OnBnClickedButton1)
+    ON_BN_CLICKED(IDC_BUTTON2, &CTest4Dlg::OnBnClickedButton2)
 END_MESSAGE_MAP()
 
 
@@ -50,6 +52,8 @@ BOOL CTest4Dlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+    
+
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -109,6 +113,174 @@ void CTest4Dlg::OnBnClickedButton1()
             CStringA jsonData = "{\"num1\": 10, \"num2\": 20}";
 
             HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/add",
+                NULL, WINHTTP_NO_REFERER,
+                WINHTTP_DEFAULT_ACCEPT_TYPES,
+                0);
+
+            if (hRequest)
+            {
+                // Set request headers
+                const wchar_t* headers = L"Content-Type: application/json";
+                if (!WinHttpSendRequest(hRequest, headers, -1L,
+                    (LPVOID)(LPSTR)jsonData.GetBuffer(), jsonData.GetLength(), jsonData.GetLength(), 0))
+                {
+                    AfxMessageBox(_T("Error sending request."));
+                }
+                else
+                {
+                    if (!WinHttpReceiveResponse(hRequest, NULL))
+                    {
+                        AfxMessageBox(_T("Error receiving response."));
+                    }
+                    else
+                    {
+                        DWORD dwSize = 0;
+                        DWORD dwDownloaded = 0;
+                        LPSTR pszOutBuffer;
+                        CStringA response;
+
+                        do
+                        {
+                            dwSize = 0;
+                            if (!WinHttpQueryDataAvailable(hRequest, &dwSize))
+                            {
+                                AfxMessageBox(_T("Error in WinHttpQueryDataAvailable."));
+                                break;
+                            }
+
+                            pszOutBuffer = new char[dwSize + 1];
+
+                            if (!pszOutBuffer)
+                            {
+                                AfxMessageBox(_T("Out of memory."));
+                                dwSize = 0;
+                            }
+                            else
+                            {
+                                ZeroMemory(pszOutBuffer, dwSize + 1);
+
+                                if (!WinHttpReadData(hRequest, (LPVOID)pszOutBuffer,
+                                    dwSize, &dwDownloaded))
+                                {
+                                    AfxMessageBox(_T("Error in WinHttpReadData."));
+                                }
+                                else
+                                {
+                                    response += CStringA(pszOutBuffer);
+                                }
+
+                                delete[] pszOutBuffer;
+                            }
+                        } while (dwSize > 0);
+
+                        AfxMessageBox(CString(response));
+                    }
+                }
+
+                WinHttpCloseHandle(hRequest);
+            }
+
+            WinHttpCloseHandle(hConnect);
+        }
+
+        WinHttpCloseHandle(hSession);
+    }
+}
+
+string CTest4Dlg::setArrayForCurrent()
+{
+    current.clear();
+
+    ifstream input("res\\current.txt");
+    string line;
+
+    while (getline(input, line)) {
+        istringstream ss(line);  // 문자열 스트림을 생성하여 줄을 읽음
+        string token;
+
+        while (getline(ss, token, ',')) {  // 콤마로 구분된 토큰을 추출
+            double data = stod(token);  // 문자열을 double로 변환
+            current.push_back(data);  // 벡터에 추가
+        }
+    }
+
+    string output;
+    int i = 0;
+    for (double num : current)
+    {
+        i++;
+
+        if (i >= current.size())
+        {
+            output += to_string(num);
+        }
+        else
+        {
+            output += to_string(num) + ", ";
+        }
+    }
+
+    return output;
+}
+
+string CTest4Dlg::setArrayForVibration()
+{
+    vibration.clear();
+
+    ifstream input("res\\vibration.txt");
+    string line;
+
+    while (getline(input, line)) {
+        istringstream ss(line);  // 문자열 스트림을 생성하여 줄을 읽음
+        string token;
+
+        while (getline(ss, token, ',')) {  // 콤마로 구분된 토큰을 추출
+            double data = stod(token);  // 문자열을 double로 변환
+            vibration.push_back(data);  // 벡터에 추가
+        }
+    }
+
+    string output;
+    int i = 0;
+    for (double num : vibration)
+    {
+        i++;
+        
+        if (i >= vibration.size())
+        {
+            output += to_string(num);
+        }
+        else
+        {
+            output += to_string(num) + ", ";
+        }
+    }
+
+    return output;
+}
+
+void CTest4Dlg::OnBnClickedButton2()
+{
+    
+    HINTERNET hSession = WinHttpOpen(L"A WinHTTP Example Program/1.0",
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+        WINHTTP_NO_PROXY_NAME,
+        WINHTTP_NO_PROXY_BYPASS, 0);
+
+    if (hSession)
+    {
+        HINTERNET hConnect = WinHttpConnect(hSession, L"127.0.0.1",
+            5000, 0);
+
+        if (hConnect)
+        {
+            string vibString = setArrayForVibration();
+            string curString = setArrayForCurrent();
+
+            CStringA jsonData;
+            jsonData.Format("{\"vibration\": [%s], \"current\": [%s]}", vibString.c_str(), curString.c_str());
+
+            HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/robot_welding_predicitive_maintenance",
                 NULL, WINHTTP_NO_REFERER,
                 WINHTTP_DEFAULT_ACCEPT_TYPES,
                 0);
