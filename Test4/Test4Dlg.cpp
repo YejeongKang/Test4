@@ -1,14 +1,6 @@
 ﻿// Test4Dlg.cpp : implementation file
 //
-
-#include "pch.h"
-#include "framework.h"
-#include "Test4.h"
 #include "Test4Dlg.h"
-#include "afxdialogex.h"
-
-#include <winhttp.h>
-#include <afxwin.h> // For AfxMessageBox
 #pragma comment(lib, "winhttp.lib")
 
 

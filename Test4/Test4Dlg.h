@@ -9,6 +9,16 @@
 #include <iostream> 
 #include <string>
 
+
+#include "pch.h"
+#include "framework.h"
+#include "Test4.h"
+
+#include "afxdialogex.h"
+
+#include <winhttp.h>
+#include <afxwin.h> // For AfxMessageBox
+
 using namespace std;
 
 // CTest4Dlg dialog
